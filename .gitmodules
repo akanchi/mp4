@@ -1,0 +1,3 @@
+[submodule "trunk/simple_buffer"]
+	path = trunk/simple_buffer
+	url = git@github.com:akanchi/SimpleBuffer.git
