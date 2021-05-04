@@ -60,6 +60,10 @@
         "typeinfo": "cpp",
         "unordered_map": "cpp",
         "vector": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "deque": "cpp",
+        "filesystem": "cpp",
+        "iomanip": "cpp",
+        "stack": "cpp"
     }
 }

@@ -8,6 +8,7 @@
                 "-g",
                 "${fileDirname}/**.cpp",
                 "${fileDirname}/simple_buffer/**.cpp",
+                "${fileDirname}/boxs/**.cpp",
                 "-o",
                 "${fileDirname}/main.out"
             ],
