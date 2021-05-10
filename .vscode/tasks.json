@@ -9,6 +9,8 @@
                 "${fileDirname}/**.cpp",
                 "${fileDirname}/simple_buffer/**.cpp",
                 "${fileDirname}/boxs/**.cpp",
+                "${fileDirname}/common/**.cpp",
+                "${fileDirname}/tracks/**.cpp",
                 "-o",
                 "${fileDirname}/main.out"
             ],

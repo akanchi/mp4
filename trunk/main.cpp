@@ -9,7 +9,7 @@ using namespace akanchi;
 int main() {
     std::cout << "mp4" << std::endl;
 
-    std::ifstream ifile("./docs/output.mp4", std::ios::binary | std::ios::in);
+    std::ifstream ifile("./docs/SampleVideo_360x240_5mb-base.mp4", std::ios::binary | std::ios::in);
 
     Mp4Demuxer demuxer;
     SimpleBuffer in;
@@ -24,9 +24,7 @@ int main() {
         // }
     }
 
-    while (!in.empty()) {
-        int ret = demuxer.decode(&in);
-    }
+    int ret = demuxer.decode(&in);
 
     return 0;
 }

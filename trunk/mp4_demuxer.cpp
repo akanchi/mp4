@@ -2,6 +2,7 @@
 #include <iostream>
 #include "simple_buffer/simple_buffer.h"
 #include "boxs/box.hpp"
+#include "common/common.hpp"
 
 namespace akanchi
 {
@@ -18,6 +19,7 @@ namespace akanchi
     {
         int i = 0;
         Box *tmpRoot = _root;
+        Box *stbl;
         while (!inSb->empty())
         {
             uint32_t start = inSb->pos();
@@ -32,76 +34,75 @@ namespace akanchi
             }
 
             uint32_t type = inSb->read_4bytes();
-            // sb->skip(size-8);
 
-            std::cout << "index=" << std::dec << (++i) <<", size=" << std::dec << size << ", type=" << typeString(type) << ", isContainerBox=" << isContainerBox(type) << std::endl;
+            std::cout << "index=" << std::dec << (++i) <<", size=" << std::dec << size << ", type=" << ascii_from(type) << ", isContainerBox=" << isContainerBox(type) << std::endl;
 
-            Box *box = new Box();
-            box->type = type;
-            box->size = size;
-            box->start = start;
+            bool should_skip = true;
+            Box *box = nullptr; 
+            if (ascii_from(type) == "stsd") {
+                BoxStsd *stsdBox = new BoxStsd();
+                box = stsdBox;
+                inSb->skip(-8);
+                box->decode(inSb);
+                should_skip = false;
+                uint32_t codec_id = stsdBox->codec_ids[0];
+                contexts[codec_id] = std::shared_ptr<TrackContext>(TrackContext::create_track_context(codec_id));
+                contexts[codec_id]->stbl = stbl;
+                contexts[codec_id]->sb = inSb;
+                contexts[codec_id]->audioSpecConfig = stsdBox->audioSpecConfig;
+            } else if (ascii_from(type) == "stco") {
+                box = new BoxStco();
+                inSb->skip(-8);
+                box->decode(inSb);
+                should_skip = false;
+            } else if (ascii_from(type) == "stsz") {
+                box = new BoxStsz();
+                inSb->skip(-8);
+                box->decode(inSb);
+                should_skip = false;
+            } else if (ascii_from(type) == "stsc") {
+                box = new BoxStsc();
+                inSb->skip(-8);
+                box->decode(inSb);
+                should_skip = false;
+            } else {
+                box = new Box();
+                box->type = type;
+                box->size = size;
+                box->start = start;
 
+                if (ascii_from(type) == "stbl") {
+                    stbl = box;
+                }
+            }
+            
             tmpRoot->append(box);
             if (isContainerBox(type)) {
                 tmpRoot = box;
                 continue;
-            } else {
+            } else if (should_skip) {
                 // normal box
                 inSb->skip(size-8);
             }
         }
+
+        for (auto it = contexts.begin(); it != contexts.end(); it++) {
+            it->second->extract();
+        }
         
-
-        // if (!sb->require(4)) {
-        //     return -1;
-        // }
-
-        // uint32_t size = sb->read_4bytes();
-        // if (!sb->require(size-4)) {
-        //     sb->skip(-4);
-        //     return -1;
-        // }
-
-        // uint32_t type = sb->read_4bytes();
-        // sb->skip(size-8);
-
-        // std::cout << "size=" << std::dec << size << ", type=" << std::hex << type << std::endl;
-
-        // Box *box = new Box();
-        // box->type = type;
-        // box->size = type;
-
-
-        // // Box *ret = Box::create_box(inSb);
-
-        // if (box && isContainerBox(box->type)) {
-        //     std::cout << "\t isContainerBox" << std::endl;
-        // }
-
         return 0;
     }
 
     bool Mp4Demuxer::isContainerBox(uint32_t type) 
     {
-        return type == BoxType::moov || 
-                type == BoxType::trak ||
-                type == BoxType::edts ||
-                type == BoxType::mdia ||
-                type == BoxType::meta ||
-                type == BoxType::minf ||
-                type == BoxType::stbl ||
-                type == BoxType::dinf;
-    }
-
-    inline std::string Mp4Demuxer::typeString(uint32_t type) 
-    {
-        std::string ret = "";
-
-        ret.push_back('\0' + (type >> 24) & 0xFF);
-        ret.push_back('\0' + (type >> 16) & 0xFF);
-        ret.push_back('\0' + (type >> 8) & 0xFF);
-        ret.push_back('\0' + (type) & 0xFF);
-
-        return ret;
+        std::string type_string = ascii_from(type);
+        return type_string == "moov" || 
+                type_string == "trak" ||
+                type_string == "edts" ||
+                type_string == "mdia" ||
+                type_string == "meta" ||
+                type_string == "minf" ||
+                type_string == "stbl" ||
+                type_string == "dinf";
     }
 }

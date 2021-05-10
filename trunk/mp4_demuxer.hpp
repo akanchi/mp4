@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 #include <string>
+#include <map>
+#include <memory>
+
+#include "tracks/track_context.hpp"
 
 class SimpleBuffer;
 
@@ -13,6 +17,7 @@ namespace akanchi
     private:
         /* data */
         Box *_root;
+        std::map<uint32_t, std::shared_ptr<TrackContext> > contexts;
     public:
         Mp4Demuxer(/* args */);
         virtual ~Mp4Demuxer();
@@ -22,6 +27,5 @@ namespace akanchi
 
     private:
         bool isContainerBox(uint32_t type);
-        std::string typeString(uint32_t type);
     };
 }
