@@ -49,6 +49,7 @@ namespace akanchi
         std::vector<uint32_t> codec_ids;
         std::shared_ptr<Box> esds;
         std::shared_ptr<Box> avcC;
+        std::shared_ptr<Box> hvcC;
         AudioSpecificConfig audioSpecConfig;
     public:
         BoxStsd(/* args */);

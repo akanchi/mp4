@@ -56,5 +56,5 @@ for (int i = 0; i < sample_sizes.count; i++) {
 }
 ```
 
-提取avc的时候，一个sample可能含有多个nalu，格式是``` [nalu length(4bytes)][nalu data(nalu length bytes)]+[nalu length][nalu data]+...```
+提取`avc`的时候，一个`sample`可能含有多个`nalu`，格式是``` [nalu length(4bytes)][nalu data(nalu length bytes)]+[nalu length][nalu data]+...```。这个规则同样适用于`hevc`的提取。
 

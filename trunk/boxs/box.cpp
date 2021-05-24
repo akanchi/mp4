@@ -75,7 +75,8 @@ namespace akanchi
             std::cout << "\n\tsize=" << entries_size << ", data format=" << ascii_from(format) << std::endl;
             uint32_t end_pos = sb->pos() + entries_size - 8;
 
-            if (format == 0x6d703461) {
+            std::string format_string = ascii_from(format);
+            if (format_string == "mp4a") {
                 // mp4a
                 sb->read_string(6);
                 uint16_t data_reference_index = sb->read_2bytes();
@@ -149,7 +150,7 @@ namespace akanchi
                         }
                     }
                 }
-            } else if (format == 0x61766331) {
+            } else if (format_string == "avc1") {
                 // avc1
                 sb->read_string(6);
                 uint16_t data_reference_index = sb->read_2bytes();
@@ -165,6 +166,23 @@ namespace akanchi
                 Box *tmp_avcC = Box::create_box(sb);
                 if (tmp_avcC) {
                     avcC = std::shared_ptr<Box>(tmp_avcC);
+                }
+            } else if (format_string == "hev1") {
+                // hev1
+                sb->read_string(6);
+                uint16_t data_reference_index = sb->read_2bytes();
+                sb->read_string(16);
+                uint16_t width = sb->read_2bytes();
+                uint16_t height = sb->read_2bytes();
+                sb->read_string(14);
+                sb->read_string(32);
+                sb->read_string(4);
+
+                codec_ids.push_back(173);
+
+                Box *tmp_hvcC = Box::create_box(sb);
+                if (tmp_hvcC) {
+                    hvcC = std::shared_ptr<Box>(tmp_hvcC);
                 }
             }
 

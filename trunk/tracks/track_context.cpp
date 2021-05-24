@@ -1,6 +1,7 @@
 #include "track_context.hpp"
 #include "track_context_avc.hpp"
 #include "track_context_aac.hpp"
+#include "track_context_hevc.hpp"
 
 #include "../simple_buffer/simple_buffer.h"
 
@@ -91,6 +92,8 @@ namespace akanchi
             return new TrackContextAVC();
         } else if (codec_id == 0x15002) {
             return new TrackContextAAC();
+        } else if (codec_id == 0xad) {
+            return new TrackContextHEVC();
         }
 
         return nullptr;
