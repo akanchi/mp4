@@ -18,17 +18,27 @@ namespace akanchi
     int TrackContextAVC::write_file_header(std::ofstream &out_file) {
         char start_code[4] = {0x00, 0x00, 0x00, 0x01};
         if (stsd && stsd->avcC) {
-            char *avcC_start = sb->data() + stsd->avcC->start;
-            uint16_t sps_count = avcC_start[13] & 0x1f;
-            uint16_t sps_size = ((avcC_start[14] & 0xff) << 8) + (avcC_start[15] & 0xff);
-            out_file.write(&start_code[0], 4);
-            out_file.write(&avcC_start[16], sps_size);
+            // skip configurations
+            int pos = stsd->avcC->start + 13;
+            uint16_t sps_count = sb->data()[pos] & 0x1f;
+            pos += 1;
+            for (int i = 0; i < sps_count; i++) {
+                char *start = sb->data() + pos;
+                uint16_t sps_size = ((start[0] & 0xff) << 8) + (start[1] & 0xff);
+                out_file.write(&start_code[0], 4);
+                out_file.write(&start[2], sps_size);
+                pos += 2 + sps_size;
+            }
 
-            char *pps_start = avcC_start + 16 + sps_size;
-            uint16_t pps_count = pps_start[0] & 0x1f;
-            uint16_t pps_size = ((pps_start[1] & 0xff) << 8) + (pps_start[2] & 0xff);
-            out_file.write(&start_code[0], 4);
-            out_file.write(&pps_start[3], pps_size);
+            uint16_t pps_count = sb->data()[pos] & 0x1f;
+            pos += 1;
+            for (int i = 0; i < pps_count; i++) {
+                char *start = sb->data() + pos;
+                uint16_t pps_size = ((start[0] & 0xff) << 8) + (start[1] & 0xff);
+                out_file.write(&start_code[0], 4);
+                out_file.write(&start[2], pps_size);
+                pos += 2 + pps_size;
+            }
         }
         return 0;
     }
