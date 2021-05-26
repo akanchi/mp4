@@ -61,12 +61,12 @@ namespace akanchi
 
             current_entry_sample_index++;
             sample_offset += *sampleSizeIt;
-            std::cout << "chunk_logic_index=" << chunk_logic_index \
-                        << ", current_entry_index=" << current_entry_index \
-                        << ", current_entry_sample_index=" << current_entry_sample_index \
-                        << ", sample_offset=" << sample_offset \
-                        << ", entry.samples_per_chunk=" << entry.samples_per_chunk \
-                        << std::endl;
+//            std::cout << "chunk_logic_index=" << chunk_logic_index \
+//                        << ", current_entry_index=" << current_entry_index \
+//                        << ", current_entry_sample_index=" << current_entry_sample_index \
+//                        << ", sample_offset=" << sample_offset \
+//                        << ", entry.samples_per_chunk=" << entry.samples_per_chunk \
+//                        << std::endl;
             if (current_entry_sample_index >= entry.samples_per_chunk) {
                 // switch to next chunk
                 if (chunk_logic_index + 1 < stco->chunk_offsets.size()) {

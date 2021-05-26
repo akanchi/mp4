@@ -33,3 +33,10 @@
 
 *.dSYM
 *.mp4
+*.aac
+*.h264
+*.h265
+
+.idea/
+# CMake
+cmake-build-*/

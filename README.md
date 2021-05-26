@@ -1,5 +1,16 @@
 # MP4 Demuxer
 
+A simple implementation of mp4 demuxing.
+
+### Usage
+
+```shell
+mkdir cmake-build-debug && cd cmake-build-debug && cmake .. && make
+./mp4_demuxer ../docs/SampleVideo_360x240_5mb-base.mp4
+```
+
+### Key points
+
 我的目的是将`mp4`文件中的`aac`和`avc`解析出来，并保存为对应媒体文件。
 
 众所周知，`mp4`的媒体数据是保存在`mdat`中，但 `mdat`没有告诉我们哪些是音频/视频数据，所以需要依赖其它`box`（主要是`stco`、`stsz`、`stsc`）去定位`mdat`中的音视频数据。

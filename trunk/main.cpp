@@ -6,10 +6,14 @@
 
 using namespace akanchi;
 
-int main() {
+int main(int argc, char *argv[]) {
     std::cout << "mp4" << std::endl;
+    if (argc <= 1) {
+        std::cout << "usage: ./mp4_demuxer test.mp4" << std::endl;
+        return 0;
+    }
 
-    std::ifstream ifile("./docs/SampleVideo_360x240_5mb-base.mp4", std::ios::binary | std::ios::in);
+    std::ifstream ifile(argv[1], std::ios::binary | std::ios::in);
 
     Mp4Demuxer demuxer;
     SimpleBuffer in;
@@ -18,13 +22,15 @@ int main() {
     char buffer[1024] = {};
     while (!ifile.eof()) {
         size_t count = ifile.read(buffer, 1024).gcount();
+        if (count == 0) {
+            break;
+        }
         in.append(buffer, count);
-        // if (ret == 0) {
-        //     in.clear();
-        // }
     }
 
+    std::cout << "begin demux..." << std::endl;
     int ret = demuxer.decode(&in);
+    std::cout << "end demux..." << std::endl;
 
     return 0;
 }
