@@ -4,9 +4,22 @@ A simple implementation of mp4 demuxing.
 
 ### Usage
 
+Build Demuxer by:
+
 ```shell
 mkdir cmake-build-debug && cd cmake-build-debug && cmake .. && make
+```
+
+Run Demuxer by:
+
+```shell
 ./mp4_demuxer ../docs/SampleVideo_360x240_5mb-base.mp4
+```
+
+Play the extracted file by:
+
+```shell
+ffplay aac_audio.aac
 ```
 
 ### Key points
