@@ -3,6 +3,19 @@ project(mp4)
 
 set(CMAKE_CXX_STANDARD 14)
 
+option(GIT_SUBMODULE "Check submodules during build" ON)
+if(GIT_SUBMODULE)
+        message(STATUS "Submodule update")
+        execute_process(COMMAND git submodule init
+                        ${CMAKE_CURRENT_LIST_DIR})
+        execute_process(COMMAND git submodule update
+                        ${CMAKE_CURRENT_LIST_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+                message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+        endif()
+endif()
+
 include_directories(trunk)
 include_directories(trunk/boxs)
 include_directories(trunk/common)
