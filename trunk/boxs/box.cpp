@@ -17,15 +17,23 @@ namespace akanchi
     }
 
     int Box::decode(SimpleBuffer *sb) {
+        start = sb->pos();
+        size = sb->read_4bytes();
+        type = sb->read_4bytes();
         return 0;
     }
 
     std::string Box::description() {
-        return "";
+        return ascii_from(type) + "[" + std::to_string(start) + ", " + std::to_string(start + size) + ")";
     }
 
     int Box::append(Box *child) {
         childs.push_back(std::shared_ptr<Box>(child));
+        return 0;
+    }
+
+    int Box::append(std::shared_ptr<Box> child) {
+        childs.push_back(child);
         return 0;
     }
 
@@ -42,11 +50,28 @@ namespace akanchi
 
         uint32_t type = sb->read_4bytes();
 
-        Box *box = new Box();
-        box->start = sb->pos() - 8;
-        box->type = type;
-        box->size = size;
-        sb->skip(size-8);
+        // move to start point
+        sb->skip(-8);
+
+        Box *box = nullptr;
+        if (ascii_from(type) == "stsd") {
+            BoxStsd *stsdBox = new BoxStsd();
+            box = stsdBox;
+            box->decode(sb);
+        } else if (ascii_from(type) == "stco") {
+            box = new BoxStco();
+            box->decode(sb);
+        } else if (ascii_from(type) == "stsz") {
+            box = new BoxStsz();
+            box->decode(sb);
+        } else if (ascii_from(type) == "stsc") {
+            box = new BoxStsc();
+            box->decode(sb);
+        } else {
+            box = new Box();
+            box->decode(sb);
+        }
+
         return box;
     }
 
@@ -59,23 +84,20 @@ namespace akanchi
     }
 
     int BoxStsd::decode(SimpleBuffer *sb) {
-        start = sb->pos();
-        size = sb->read_4bytes();
-        type = sb->read_4bytes();
-
+        Box::decode(sb);
+        
         version = sb->read_1byte();
         flags = sb->read_3bytes();
         entries_count = sb->read_4bytes();
 
         for (size_t i = 0; i < entries_count; i++) {
-            uint32_t start_pos = sb->pos();
-            uint32_t entries_size = sb->read_4bytes(); /* size */
-            uint32_t format = sb->read_4bytes(); /* data format */
+            Box *entryBox = Box::create_box(sb);
+            append(entryBox);
             // entries_format.push_back(format);
-            std::cout << "\n\tsize=" << entries_size << ", data format=" << ascii_from(format) << std::endl;
-            uint32_t end_pos = sb->pos() + entries_size - 8;
+            // std::cout << "\n\tsize=" << entries_size << ", data format=" << ascii_from(format) << std::endl;
+            uint32_t end_pos = entryBox->start + entryBox->size;
 
-            std::string format_string = ascii_from(format);
+            std::string format_string = ascii_from(entryBox->type);
             if (format_string == "mp4a") {
                 // mp4a
                 sb->read_string(6);
@@ -90,7 +112,7 @@ namespace akanchi
                 Box *tmp_esds = Box::create_box(sb);
                 if (tmp_esds) {
                     esds = std::shared_ptr<Box>(tmp_esds);
-                    sb->skip(-esds->size + 8);
+                    entryBox->append(esds);
                     // @see: ffmpeg: ff_mov_read_esds
                     /* version + flags */
                     sb->read_4bytes();
@@ -166,6 +188,7 @@ namespace akanchi
                 Box *tmp_avcC = Box::create_box(sb);
                 if (tmp_avcC) {
                     avcC = std::shared_ptr<Box>(tmp_avcC);
+                    entryBox->append(avcC);
                 }
             } else if (format_string == "hev1") {
                 // hev1
@@ -183,6 +206,7 @@ namespace akanchi
                 Box *tmp_hvcC = Box::create_box(sb);
                 if (tmp_hvcC) {
                     hvcC = std::shared_ptr<Box>(tmp_hvcC);
+                    entryBox->append(hvcC);
                 }
             }
 
@@ -214,9 +238,7 @@ namespace akanchi
     }
 
     int BoxStsc::decode(SimpleBuffer *sb) {
-        start = sb->pos();
-        size = sb->read_4bytes();
-        type = sb->read_4bytes();
+        Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
         uint32_t flags = sb->read_3bytes();
@@ -243,9 +265,7 @@ namespace akanchi
     }
 
     int BoxStsz::decode(SimpleBuffer *sb) {
-        start = sb->pos();
-        size = sb->read_4bytes();
-        type = sb->read_4bytes();
+        Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
         uint32_t flags = sb->read_3bytes();
@@ -268,9 +288,7 @@ namespace akanchi
     }
 
     int BoxStco::decode(SimpleBuffer *sb) {
-        start = sb->pos();
-        size = sb->read_4bytes();
-        type = sb->read_4bytes();
+        Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
         uint32_t flags = sb->read_3bytes();

@@ -26,6 +26,7 @@ namespace akanchi
         virtual std::string description();
 
         virtual int append(Box *child);
+        virtual int append(std::shared_ptr<Box> child);
 
     public:
         static Box *create_box(SimpleBuffer *sb);

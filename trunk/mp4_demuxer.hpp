@@ -16,7 +16,7 @@ namespace akanchi
     {
     private:
         /* data */
-        Box *_root;
+        std::shared_ptr<Box> root;
         std::map<uint32_t, std::shared_ptr<TrackContext> > contexts;
     public:
         Mp4Demuxer(/* args */);
@@ -24,8 +24,10 @@ namespace akanchi
 
     public:
         int decode(SimpleBuffer *inSb);
+        int print();
 
     private:
-        bool isContainerBox(uint32_t type);
+        bool is_container_box(uint32_t type);
+        int print_recursive(Box *box, std::string prefix);
     };
 }

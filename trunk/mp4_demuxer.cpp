@@ -1,5 +1,7 @@
 #include "mp4_demuxer.hpp"
 #include <iostream>
+#include <stack>
+#include <tuple>
 #include "simple_buffer/simple_buffer.h"
 #include "boxs/box.hpp"
 #include "common/common.hpp"
@@ -7,7 +9,7 @@
 namespace akanchi
 {
     Mp4Demuxer::Mp4Demuxer(/* args */)
-        : _root(new Box())
+        : root(new Box())
     {
     }
 
@@ -17,72 +19,52 @@ namespace akanchi
 
     int Mp4Demuxer::decode(SimpleBuffer *inSb)
     {
-        int i = 0;
-        Box *tmpRoot = _root;
+        root->start = 0;
+        root->size = inSb->size();
+        Box *tmpRoot = root.get();
         Box *stbl;
+
+        std::stack<Box*> parentStack;
+        parentStack.push(tmpRoot);
+
         while (!inSb->empty())
         {
-            uint32_t start = inSb->pos();
-            if (!inSb->require(4)) {
-                return -1;
+            Box *box = Box::create_box(inSb);
+            if (!box) {
+                std::cout << "can't create box!" << std::endl;
+                return -1; 
             }
 
-            uint32_t size = inSb->read_4bytes();
-            if (!inSb->require(size-4)) {
-                inSb->skip(-4);
-                return -1;
-            }
-
-            uint32_t type = inSb->read_4bytes();
-
-            std::cout << "index=" << std::dec << (++i) <<", size=" << std::dec << size << ", type=" << ascii_from(type) << ", isContainerBox=" << isContainerBox(type) << std::endl;
-
-            bool should_skip = true;
-            Box *box = nullptr; 
-            if (ascii_from(type) == "stsd") {
-                BoxStsd *stsdBox = new BoxStsd();
-                box = stsdBox;
-                inSb->skip(-8);
-                box->decode(inSb);
-                should_skip = false;
+            if (ascii_from(box->type) == "stsd") {
+                BoxStsd *stsdBox = dynamic_cast<BoxStsd*>(box);
                 uint32_t codec_id = stsdBox->codec_ids[0];
                 contexts[codec_id] = std::shared_ptr<TrackContext>(TrackContext::create_track_context(codec_id));
                 contexts[codec_id]->stbl = stbl;
                 contexts[codec_id]->sb = inSb;
                 contexts[codec_id]->audioSpecConfig = stsdBox->audioSpecConfig;
-            } else if (ascii_from(type) == "stco") {
-                box = new BoxStco();
-                inSb->skip(-8);
-                box->decode(inSb);
-                should_skip = false;
-            } else if (ascii_from(type) == "stsz") {
-                box = new BoxStsz();
-                inSb->skip(-8);
-                box->decode(inSb);
-                should_skip = false;
-            } else if (ascii_from(type) == "stsc") {
-                box = new BoxStsc();
-                inSb->skip(-8);
-                box->decode(inSb);
-                should_skip = false;
-            } else {
-                box = new Box();
-                box->type = type;
-                box->size = size;
-                box->start = start;
-
-                if (ascii_from(type) == "stbl") {
-                    stbl = box;
-                }
+            } else if (ascii_from(box->type) == "stbl") {
+                stbl = box;
             }
-            
+
             tmpRoot->append(box);
-            if (isContainerBox(type)) {
+            if (is_container_box(box->type)) {
                 tmpRoot = box;
+                parentStack.push(tmpRoot);
                 continue;
-            } else if (should_skip) {
-                // normal box
-                inSb->skip(size-8);
+            } else {
+                int end_pos = box->start + box->size;
+                inSb->skip(end_pos - inSb->pos());
+                while (!parentStack.empty()) {
+                    if (box->start + box->size >= tmpRoot->start + tmpRoot->size) {
+                        parentStack.pop();
+                        if (parentStack.empty()) {
+                            break;
+                        }
+                        tmpRoot = parentStack.top();
+                    } else {
+                        break;
+                    }
+                }
             }
         }
 
@@ -93,7 +75,7 @@ namespace akanchi
         return 0;
     }
 
-    bool Mp4Demuxer::isContainerBox(uint32_t type) 
+    bool Mp4Demuxer::is_container_box(uint32_t type) 
     {
         std::string type_string = ascii_from(type);
         return type_string == "moov" || 
@@ -104,5 +86,25 @@ namespace akanchi
                 type_string == "minf" ||
                 type_string == "stbl" ||
                 type_string == "dinf";
+    }
+
+    int Mp4Demuxer::print() 
+    {
+        return print_recursive(root.get(), "");
+    }
+
+    int Mp4Demuxer::print_recursive(Box *box, std::string prefix)
+    {
+        if (!box) {
+            return -1;
+        }
+
+        std::cout << prefix << box->description() << std::endl;
+
+        for (auto it = box->childs.begin(); it != box->childs.end(); it++) {
+            print_recursive(it->get(), prefix + "    ");
+        }
+
+        return 0;
     }
 }
