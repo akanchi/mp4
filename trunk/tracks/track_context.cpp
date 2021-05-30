@@ -3,7 +3,7 @@
 #include "track_context_aac.hpp"
 #include "track_context_hevc.hpp"
 
-#include "../simple_buffer/simple_buffer.h"
+#include "../file_stream/file_stream.hpp"
 
 namespace akanchi
 {
@@ -23,7 +23,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContext::write_to_file(std::ofstream &out_file, SimpleBuffer *sb, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContext::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
         return 0;
     }
 
@@ -61,7 +61,7 @@ namespace akanchi
             StscEntry entry = stsc->entries[current_entry_index];
             uint64_t pos = stco->chunk_offsets[chunk_logic_index] + sample_offset;
 
-            write_to_file(out_file, sb, pos, *sampleSizeIt);
+            write_to_file(out_file, pos, *sampleSizeIt);
 
             current_entry_sample_index++;
             sample_offset += *sampleSizeIt;
@@ -78,7 +78,7 @@ namespace akanchi
                 }
 
                 // reset sample offset
-                sample_offset= 0;
+                sample_offset = 0;
                 current_entry_sample_index = 0;
             }
 

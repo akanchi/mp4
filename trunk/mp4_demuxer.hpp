@@ -7,7 +7,7 @@
 
 #include "tracks/track_context.hpp"
 
-class SimpleBuffer;
+class FileStreamBuffer;
 
 namespace akanchi
 {
@@ -23,7 +23,8 @@ namespace akanchi
         virtual ~Mp4Demuxer();
 
     public:
-        int decode(SimpleBuffer *inSb);
+        int decode(FileStreamBuffer *inSb);
+        int extract();
         int print();
 
     private:

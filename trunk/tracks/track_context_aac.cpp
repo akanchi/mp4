@@ -1,5 +1,5 @@
 #include "track_context_aac.hpp"
-#include "../simple_buffer/simple_buffer.h"
+#include "../file_stream/file_stream.hpp"
 
 namespace akanchi 
 {
@@ -19,7 +19,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContextAAC::write_to_file(std::ofstream &out_file, SimpleBuffer *sb, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContextAAC::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
         char packet[7] = {0};
 
         int profile = audioSpecConfig.audioObjectType;
@@ -36,7 +36,8 @@ namespace akanchi
         packet[6] = (char)0xFC;
 
         out_file.write(packet, 7);
-        out_file.write(sb->data() + start_pos, sample_size);
+        sb->setPos(start_pos);
+        sb->read_to_outstream(out_file, sample_size);
 
         return 0;
     }

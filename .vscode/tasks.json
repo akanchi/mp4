@@ -7,7 +7,7 @@
             "args": [
                 "-g",
                 "${fileDirname}/**.cpp",
-                "${fileDirname}/simple_buffer/**.cpp",
+                "${fileDirname}/file_stream/**.cpp",
                 "${fileDirname}/boxs/**.cpp",
                 "${fileDirname}/common/**.cpp",
                 "${fileDirname}/tracks/**.cpp",

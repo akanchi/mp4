@@ -2,7 +2,7 @@
 #include <iostream>
 #include <stack>
 #include <tuple>
-#include "simple_buffer/simple_buffer.h"
+#include "file_stream/file_stream.hpp"
 #include "boxs/box.hpp"
 #include "common/common.hpp"
 
@@ -17,12 +17,11 @@ namespace akanchi
     {
     }
 
-    int Mp4Demuxer::decode(SimpleBuffer *inSb)
+    int Mp4Demuxer::decode(FileStreamBuffer *inSb)
     {
         root->start = 0;
         root->size = inSb->size();
         Box *tmpRoot = root.get();
-
 
         std::stack<Box*> parentStack;
         parentStack.push(tmpRoot);
@@ -64,10 +63,6 @@ namespace akanchi
                 }
             }
         }
-
-        for (auto it = contexts.begin(); it != contexts.end(); it++) {
-            it->second->extract();
-        }
         
         return 0;
     }
@@ -83,6 +78,15 @@ namespace akanchi
                 type_string == "minf" ||
                 type_string == "stbl" ||
                 type_string == "dinf";
+    }
+
+    int Mp4Demuxer::extract()
+    {
+        for (auto it = contexts.begin(); it != contexts.end(); it++) {
+            it->second->extract();
+        }
+
+        return 0;
     }
 
     int Mp4Demuxer::print() 

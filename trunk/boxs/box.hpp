@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-class SimpleBuffer;
+class FileStreamBuffer;
 
 namespace akanchi
 {
@@ -29,7 +29,7 @@ namespace akanchi
         virtual ~Box();
 
     public:
-        virtual int decode(SimpleBuffer *sb);
+        virtual int decode(FileStreamBuffer *sb);
         virtual std::string description();
 
         virtual int append(Box *child);
@@ -37,7 +37,7 @@ namespace akanchi
         virtual std::shared_ptr<Box> get_child(std::string type);
 
     public:
-        static Box *create_box(SimpleBuffer *sb);
+        static Box *create_box(FileStreamBuffer *sb);
     };
 
     typedef struct AudioSpecificConfig {
@@ -62,7 +62,7 @@ namespace akanchi
         virtual CodecId get_codec_id();
 
     public:
-        int decode(SimpleBuffer *sb) override;
+        int decode(FileStreamBuffer *sb) override;
     };
 
     typedef struct StscEntry
@@ -82,7 +82,7 @@ namespace akanchi
         virtual ~BoxStsc();
 
     public:
-        int decode(SimpleBuffer *sb) override;
+        int decode(FileStreamBuffer *sb) override;
     };
 
     class BoxStsz : public Box
@@ -95,7 +95,7 @@ namespace akanchi
         virtual ~BoxStsz();
 
     public:
-        int decode(SimpleBuffer *sb) override;
+        int decode(FileStreamBuffer *sb) override;
     };
     
     class BoxStco : public Box
@@ -108,7 +108,7 @@ namespace akanchi
         ~BoxStco();
 
     public:
-        int decode(SimpleBuffer *sb) override;
+        int decode(FileStreamBuffer *sb) override;
     };
 
     class BoxEsds : public Box
@@ -121,10 +121,10 @@ namespace akanchi
         virtual ~BoxEsds();
 
     public:
-        int decode(SimpleBuffer *sb) override;
+        int decode(FileStreamBuffer *sb) override;
 
     private:
-        int get_descr_len(SimpleBuffer *sb);
+        int get_descr_len(FileStreamBuffer *sb);
     };
     
 } /* namespace akanchi */

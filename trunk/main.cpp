@@ -2,7 +2,7 @@
 #include <memory>
 #include <fstream>
 #include "mp4_demuxer.hpp"
-#include "simple_buffer/simple_buffer.h"
+#include "file_stream/file_stream.hpp"
 
 using namespace akanchi;
 
@@ -13,20 +13,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::ifstream ifile(argv[1], std::ios::binary | std::ios::in);
-
     Mp4Demuxer demuxer;
-    SimpleBuffer in;
-
-    // FIXME: Simply read the entire file. Maybe use seekg.
-    char buffer[1024] = {};
-    while (!ifile.eof()) {
-        size_t count = ifile.read(buffer, 1024).gcount();
-        if (count == 0) {
-            break;
-        }
-        in.append(buffer, count);
-    }
+    FileStreamBuffer in(argv[1]);
 
     std::cout << "begin demux file: " << argv[1] << std::endl;
     int ret = demuxer.decode(&in);
@@ -34,6 +22,10 @@ int main(int argc, char *argv[]) {
 
     std::cout << "box tree:" << std::endl;
     demuxer.print();
+
+    std::cout << "begin extract to files" << std::endl;
+    demuxer.extract();
+    std::cout << "end extract." << std::endl;
 
     return 0;
 }

@@ -1,5 +1,5 @@
 #include "box.hpp"
-#include "../simple_buffer/simple_buffer.h"
+#include "../file_stream/file_stream.hpp"
 #include "../common/common.hpp"
 
 #include <iostream>
@@ -16,7 +16,7 @@ namespace akanchi
     {
     }
 
-    int Box::decode(SimpleBuffer *sb) {
+    int Box::decode(FileStreamBuffer *sb) {
         start = sb->pos();
         size = sb->read_4bytes();
         type = sb->read_4bytes();
@@ -47,7 +47,7 @@ namespace akanchi
         return nullptr;
     }
 
-    Box *Box::create_box(SimpleBuffer *sb) {
+    Box *Box::create_box(FileStreamBuffer *sb) {
         if (!sb->require(4)) {
             return nullptr;
         }
@@ -112,7 +112,7 @@ namespace akanchi
         return CodecId::Unknown;
     }
 
-    int BoxStsd::decode(SimpleBuffer *sb) {
+    int BoxStsd::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
         
         version = sb->read_1byte();
@@ -173,7 +173,7 @@ namespace akanchi
     {
     }
 
-    int BoxStsc::decode(SimpleBuffer *sb) {
+    int BoxStsc::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
@@ -200,7 +200,7 @@ namespace akanchi
     {
     }
 
-    int BoxStsz::decode(SimpleBuffer *sb) {
+    int BoxStsz::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
@@ -223,7 +223,7 @@ namespace akanchi
     {
     }
 
-    int BoxStco::decode(SimpleBuffer *sb) {
+    int BoxStco::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
 
         uint8_t version = sb->read_1byte();
@@ -245,7 +245,7 @@ namespace akanchi
     {
     }
 
-    int BoxEsds::decode(SimpleBuffer *sb) {
+    int BoxEsds::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
         // @see: ffmpeg: ff_mov_read_esds
         /* version + flags */
@@ -303,7 +303,7 @@ namespace akanchi
         return 0;
     }
 
-    int BoxEsds::get_descr_len(SimpleBuffer *sb)
+    int BoxEsds::get_descr_len(FileStreamBuffer *sb)
     {
         int len = 0;
         int count = 4;
