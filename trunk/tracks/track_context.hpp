@@ -15,7 +15,6 @@ namespace akanchi
         /* data */
         Box *stbl;
         SimpleBuffer *sb;
-        AudioSpecificConfig audioSpecConfig;
 
         BoxStco *stco;
         BoxStsz *stsz;
@@ -26,6 +25,7 @@ namespace akanchi
         TrackContext(/* args */);
         virtual ~TrackContext();
 
+        virtual void initialize_boxs();
         virtual std::string file_name();
         virtual int write_file_header(std::ofstream &out_file);
         virtual int write_to_file(std::ofstream &out_file, SimpleBuffer *sb, uint32_t start_pos, uint64_t sample_size);

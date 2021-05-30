@@ -17,9 +17,11 @@ namespace akanchi
 
     int TrackContextAVC::write_file_header(std::ofstream &out_file) {
         char start_code[4] = {0x00, 0x00, 0x00, 0x01};
-        if (stsd && stsd->avcC) {
+        std::shared_ptr<Box> avcC = stsd->get_child("avc1")->get_child("avcC");
+
+        if (avcC) {
             // skip configurations
-            int pos = stsd->avcC->start + 13;
+            int pos = avcC->start + 13;
             uint16_t sps_count = sb->data()[pos] & 0x1f;
             pos += 1;
             for (int i = 0; i < sps_count; i++) {

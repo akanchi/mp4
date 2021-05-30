@@ -27,7 +27,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContext::extract() {
+    void TrackContext::initialize_boxs() {
         for (auto it = stbl->childs.begin(); it != stbl->childs.end(); it++) {
             if (BoxStco *tmp = dynamic_cast<BoxStco*>(it->get()))  {
                 stco = tmp;
@@ -39,6 +39,10 @@ namespace akanchi
                 stsd = tmp;
             }
         }
+    }
+
+    int TrackContext::extract() {
+        initialize_boxs();
 
         uint32_t current_entry_index = 0;
         uint32_t current_entry_sample_index = 0;
@@ -88,11 +92,11 @@ namespace akanchi
     }
 
     TrackContext *TrackContext::create_track_context(uint32_t codec_id) {
-        if (codec_id == 0x1b) {
+        if (codec_id == CodecId::AVC) {
             return new TrackContextAVC();
-        } else if (codec_id == 0x15002) {
+        } else if (codec_id == CodecId::AAC) {
             return new TrackContextAAC();
-        } else if (codec_id == 0xad) {
+        } else if (codec_id == CodecId::HEVC) {
             return new TrackContextHEVC();
         }
 

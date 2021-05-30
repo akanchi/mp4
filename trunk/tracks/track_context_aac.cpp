@@ -40,5 +40,14 @@ namespace akanchi
 
         return 0;
     }
+
+    void TrackContextAAC::initialize_boxs() {
+        TrackContext::initialize_boxs();
+
+        if (auto box = stsd->get_child("mp4a")->get_child("esds")) {
+            BoxEsds *esds = dynamic_cast<BoxEsds*>(box.get());
+            audioSpecConfig = esds->audioSpecConfig;
+        }
+    }
 }
 

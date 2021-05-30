@@ -18,9 +18,10 @@ namespace akanchi
     int TrackContextHEVC::write_file_header(std::ofstream &out_file) {
         // @see: http://ffmpeg.org/doxygen/trunk/hevc_8c_source.html#l00836
         char start_code[4] = {0x00, 0x00, 0x00, 0x01};
-        if (stsd && stsd->hvcC) {
+        std::shared_ptr<Box> hvcC = stsd->get_child("hev1")->get_child("hevC");
+        if (hvcC) {
             // skip configurations
-            int pos = stsd->hvcC->start + 30;
+            int pos = hvcC->start + 30;
 
             uint8_t num_of_arrays = sb->data()[pos];
             pos += 1;

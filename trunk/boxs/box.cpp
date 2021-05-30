@@ -37,6 +37,16 @@ namespace akanchi
         return 0;
     }
 
+    std::shared_ptr<Box> Box::get_child(std::string type) {
+        for (auto it = childs.begin(); it != childs.end(); it++) {
+            if (ascii_from((*it)->type) == type) {
+                return (*it);
+            }
+        }
+
+        return nullptr;
+    }
+
     Box *Box::create_box(SimpleBuffer *sb) {
         if (!sb->require(4)) {
             return nullptr;
@@ -54,18 +64,22 @@ namespace akanchi
         sb->skip(-8);
 
         Box *box = nullptr;
-        if (ascii_from(type) == "stsd") {
+        std::string type_string = ascii_from(type);
+        if (type_string == "stsd") {
             BoxStsd *stsdBox = new BoxStsd();
             box = stsdBox;
             box->decode(sb);
-        } else if (ascii_from(type) == "stco") {
+        } else if (type_string == "stco") {
             box = new BoxStco();
             box->decode(sb);
-        } else if (ascii_from(type) == "stsz") {
+        } else if (type_string == "stsz") {
             box = new BoxStsz();
             box->decode(sb);
-        } else if (ascii_from(type) == "stsc") {
+        } else if (type_string == "stsc") {
             box = new BoxStsc();
+            box->decode(sb);
+        } else if (type_string == "esds") {
+            box = new BoxEsds();
             box->decode(sb);
         } else {
             box = new Box();
@@ -81,6 +95,21 @@ namespace akanchi
     
     BoxStsd::~BoxStsd()
     {
+    }
+
+    CodecId BoxStsd::get_codec_id() {
+        for (auto it = childs.begin(); it != childs.end(); it++) {
+            if (auto box = (*it)->get_child("esds")) {
+                BoxEsds *esds = dynamic_cast<BoxEsds*>(box.get());
+                return esds->codec_id;
+            } else if (ascii_from((*it)->type) == "hev1") {
+                return CodecId::HEVC;
+            } else if (ascii_from((*it)->type) == "avc1") {
+                return CodecId::AVC;
+            }
+        }
+
+        return CodecId::Unknown;
     }
 
     int BoxStsd::decode(SimpleBuffer *sb) {
@@ -111,69 +140,10 @@ namespace akanchi
 
                 Box *tmp_esds = Box::create_box(sb);
                 if (tmp_esds) {
-                    esds = std::shared_ptr<Box>(tmp_esds);
-                    entryBox->append(esds);
-                    // @see: ffmpeg: ff_mov_read_esds
-                    /* version + flags */
-                    sb->read_4bytes();
-
-                    uint8_t es_descr_tag = sb->read_1byte();
-                    uint32_t es_descr_len = get_descr_len(sb);
-
-                    if (es_descr_tag == 0x03) {
-                        uint8_t flags = 0;
-                        sb->read_2bytes();
-                        flags = sb->read_1byte();
-                        if (flags & 0x80) {
-                            sb->read_2bytes();
-                        }
-
-                        if (flags & 0x40) {
-                            uint8_t len = sb->read_1byte();
-                            sb->skip(len);
-                        }
-
-                        if (flags & 0x20) {
-                            sb->read_2bytes();
-                        }
-                    } else {
-                        sb->read_2bytes();
-                    }
-
-                    es_descr_tag = sb->read_1byte();
-                    es_descr_len = get_descr_len(sb);
-
-                    if (es_descr_tag == 0x04) {
-                        int object_type_id = sb->read_1byte();
-                        sb->read_1byte(); /* stream type */
-                        sb->read_3bytes(); /* buffer size db */
-
-                        uint32_t v = sb->read_4bytes();
-
-                        uint32_t bit_rate = sb->read_4bytes(); /* avg bitrate */
-
-                        uint32_t codec_id = 0;
-
-                        es_descr_tag = sb->read_1byte();
-                        es_descr_len = get_descr_len(sb);
-
-                        if (object_type_id == 0x40) {
-                            codec_id = 0x15002;
-                            codec_ids.push_back(codec_id);
-                        }
-
-                        if (es_descr_tag == 0x05) {
-                            if (codec_id == 0x15002) {
-                                uint16_t value = sb->read_2bytes();
-                                audioSpecConfig.audioObjectType = (value >> 11) & 0x1f;
-                                audioSpecConfig.samplingFrequencyIndex = (value >> 7) & 0xf;
-                                audioSpecConfig.channelConfiguration = (value >> 3) & 0xf;
-                            }
-                        }
-                    }
+                    entryBox->append(tmp_esds);
                 }
-            } else if (format_string == "avc1") {
-                // avc1
+            } else if (format_string == "avc1" || format_string == "hev1") {
+                // avc1 || hev1
                 sb->read_string(6);
                 uint16_t data_reference_index = sb->read_2bytes();
                 sb->read_string(16);
@@ -183,30 +153,9 @@ namespace akanchi
                 sb->read_string(32);
                 sb->read_string(4);
 
-                codec_ids.push_back(27);
-
-                Box *tmp_avcC = Box::create_box(sb);
-                if (tmp_avcC) {
-                    avcC = std::shared_ptr<Box>(tmp_avcC);
-                    entryBox->append(avcC);
-                }
-            } else if (format_string == "hev1") {
-                // hev1
-                sb->read_string(6);
-                uint16_t data_reference_index = sb->read_2bytes();
-                sb->read_string(16);
-                uint16_t width = sb->read_2bytes();
-                uint16_t height = sb->read_2bytes();
-                sb->read_string(14);
-                sb->read_string(32);
-                sb->read_string(4);
-
-                codec_ids.push_back(173);
-
-                Box *tmp_hvcC = Box::create_box(sb);
-                if (tmp_hvcC) {
-                    hvcC = std::shared_ptr<Box>(tmp_hvcC);
-                    entryBox->append(hvcC);
+                Box *tmp_box = Box::create_box(sb);
+                if (tmp_box) {
+                    entryBox->append(tmp_box);
                 }
             }
 
@@ -214,19 +163,6 @@ namespace akanchi
         }
 
         return 0;
-    }
-
-    int BoxStsd::get_descr_len(SimpleBuffer *sb)
-    {
-        int len = 0;
-        int count = 4;
-        while (count--) {
-            int c = sb->read_1byte();
-            len = (len << 7) | (c & 0x7f);
-            if (!(c & 0x80))
-                break;
-        }
-        return len;
     }
 
     BoxStsc::BoxStsc(/* args */)
@@ -299,5 +235,84 @@ namespace akanchi
         }
 
         return 0;
+    }
+
+    BoxEsds::BoxEsds(/* args */)
+    {
+    }
+
+    BoxEsds::~BoxEsds()
+    {
+    }
+
+    int BoxEsds::decode(SimpleBuffer *sb) {
+        Box::decode(sb);
+        // @see: ffmpeg: ff_mov_read_esds
+        /* version + flags */
+        sb->read_4bytes();
+
+        uint8_t es_descr_tag = sb->read_1byte();
+        uint32_t es_descr_len = get_descr_len(sb);
+
+        if (es_descr_tag == 0x03) {
+            uint8_t flags = 0;
+            sb->read_2bytes();
+            flags = sb->read_1byte();
+            if (flags & 0x80) {
+                sb->read_2bytes();
+            }
+
+            if (flags & 0x40) {
+                uint8_t len = sb->read_1byte();
+                sb->skip(len);
+            }
+
+            if (flags & 0x20) {
+                sb->read_2bytes();
+            }
+        } else {
+            sb->read_2bytes();
+        }
+
+        es_descr_tag = sb->read_1byte();
+        es_descr_len = get_descr_len(sb);
+
+        if (es_descr_tag == 0x04) {
+            int object_type_id = sb->read_1byte();
+            sb->read_1byte(); /* stream type */
+            sb->read_3bytes(); /* buffer size db */
+
+            uint32_t v = sb->read_4bytes();
+
+            uint32_t bit_rate = sb->read_4bytes(); /* avg bitrate */
+
+            es_descr_tag = sb->read_1byte();
+            es_descr_len = get_descr_len(sb);
+
+            if (object_type_id == 0x40) {
+                codec_id = CodecId::AAC;
+                if (es_descr_tag == 0x05) {
+                    uint16_t value = sb->read_2bytes();
+                    audioSpecConfig.audioObjectType = (value >> 11) & 0x1f;
+                    audioSpecConfig.samplingFrequencyIndex = (value >> 7) & 0xf;
+                    audioSpecConfig.channelConfiguration = (value >> 3) & 0xf;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    int BoxEsds::get_descr_len(SimpleBuffer *sb)
+    {
+        int len = 0;
+        int count = 4;
+        while (count--) {
+            int c = sb->read_1byte();
+            len = (len << 7) | (c & 0x7f);
+            if (!(c & 0x80))
+                break;
+        }
+        return len;
     }
 }

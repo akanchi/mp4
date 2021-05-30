@@ -8,6 +8,13 @@ class SimpleBuffer;
 
 namespace akanchi
 {
+    enum CodecId: uint32_t {
+        Unknown = 0,
+        AAC = 0x15002,
+        AVC = 0x1b,
+        HEVC = 0xad,
+    };
+
     class Box
     {
     public:
@@ -27,6 +34,7 @@ namespace akanchi
 
         virtual int append(Box *child);
         virtual int append(std::shared_ptr<Box> child);
+        virtual std::shared_ptr<Box> get_child(std::string type);
 
     public:
         static Box *create_box(SimpleBuffer *sb);
@@ -47,20 +55,14 @@ namespace akanchi
         uint8_t version;
         uint32_t flags;
         uint32_t entries_count;
-        std::vector<uint32_t> codec_ids;
-        std::shared_ptr<Box> esds;
-        std::shared_ptr<Box> avcC;
-        std::shared_ptr<Box> hvcC;
-        AudioSpecificConfig audioSpecConfig;
     public:
         BoxStsd(/* args */);
         virtual ~BoxStsd();
 
+        virtual CodecId get_codec_id();
+
     public:
         int decode(SimpleBuffer *sb) override;
-
-    private:
-        int get_descr_len(SimpleBuffer *sb);
     };
 
     typedef struct StscEntry
@@ -107,6 +109,22 @@ namespace akanchi
 
     public:
         int decode(SimpleBuffer *sb) override;
-    };    
+    };
+
+    class BoxEsds : public Box
+    {
+    public:
+        CodecId codec_id; 
+        AudioSpecificConfig audioSpecConfig;
+    public:
+        BoxEsds(/* args */);
+        virtual ~BoxEsds();
+
+    public:
+        int decode(SimpleBuffer *sb) override;
+
+    private:
+        int get_descr_len(SimpleBuffer *sb);
+    };
     
 } /* namespace akanchi */

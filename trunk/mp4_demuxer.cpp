@@ -22,7 +22,7 @@ namespace akanchi
         root->start = 0;
         root->size = inSb->size();
         Box *tmpRoot = root.get();
-        Box *stbl;
+
 
         std::stack<Box*> parentStack;
         parentStack.push(tmpRoot);
@@ -37,13 +37,10 @@ namespace akanchi
 
             if (ascii_from(box->type) == "stsd") {
                 BoxStsd *stsdBox = dynamic_cast<BoxStsd*>(box);
-                uint32_t codec_id = stsdBox->codec_ids[0];
+                uint32_t codec_id = stsdBox->get_codec_id();
                 contexts[codec_id] = std::shared_ptr<TrackContext>(TrackContext::create_track_context(codec_id));
-                contexts[codec_id]->stbl = stbl;
+                contexts[codec_id]->stbl = tmpRoot;
                 contexts[codec_id]->sb = inSb;
-                contexts[codec_id]->audioSpecConfig = stsdBox->audioSpecConfig;
-            } else if (ascii_from(box->type) == "stbl") {
-                stbl = box;
             }
 
             tmpRoot->append(box);
