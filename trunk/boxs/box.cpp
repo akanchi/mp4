@@ -23,10 +23,10 @@
 */
 
 #include "box.hpp"
+#include <iostream>
+#include <sstream>
 #include "../file_stream/file_stream.hpp"
 #include "../common/common.hpp"
-
-#include <iostream>
 
 namespace akanchi
 {
@@ -232,8 +232,12 @@ namespace akanchi
         uint32_t sample_size = sb->read_4bytes();
         uint32_t entries_count = sb->read_4bytes();
 
-        for (size_t i = 0; i < entries_count; i++) {
-            sample_sizes.push_back(sb->read_4bytes());
+        if (sample_size != 0) {
+            sample_sizes = std::vector<uint64_t>(entries_count, sample_size);
+        } else {
+            for (size_t i = 0; i < entries_count; i++) {
+                sample_sizes.push_back(sb->read_4bytes());
+            }
         }
 
         return 0;
@@ -269,6 +273,12 @@ namespace akanchi
     {
     }
 
+    std::string BoxEsds::description() {
+        std::stringstream ss;
+        ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<unsigned>(object_type_id);
+        return Box::description() + " codec." + ss.str();
+    }
+
     int BoxEsds::decode(FileStreamBuffer *sb) {
         Box::decode(sb);
         // @see: ffmpeg: ff_mov_read_esds
@@ -302,7 +312,7 @@ namespace akanchi
         es_descr_len = get_descr_len(sb);
 
         if (es_descr_tag == 0x04) {
-            int object_type_id = sb->read_1byte();
+            object_type_id = sb->read_1byte();
             sb->read_1byte(); /* stream type */
             sb->read_3bytes(); /* buffer size db */
 
@@ -321,6 +331,8 @@ namespace akanchi
                     audioSpecConfig.samplingFrequencyIndex = (value >> 7) & 0xf;
                     audioSpecConfig.channelConfiguration = (value >> 3) & 0xf;
                 }
+            } else if (object_type_id == 0x6B) {
+                codec_id = CodecId::MP3;
             }
         }
 

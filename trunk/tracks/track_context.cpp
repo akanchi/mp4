@@ -26,6 +26,7 @@
 #include "track_context_avc.hpp"
 #include "track_context_aac.hpp"
 #include "track_context_hevc.hpp"
+#include "track_context_mp3.hpp"
 
 #include "../file_stream/file_stream.hpp"
 
@@ -122,6 +123,8 @@ namespace akanchi
             return new TrackContextAAC();
         } else if (codec_id == CodecId::HEVC) {
             return new TrackContextHEVC();
+        } else if (codec_id == CodecId::MP3) {
+            return  new TrackContextMP3();
         }
 
         return nullptr;

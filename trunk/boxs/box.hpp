@@ -34,9 +34,10 @@ namespace akanchi
 {
     enum CodecId: uint32_t {
         Unknown = 0,
-        AAC = 0x15002,
         AVC = 0x1b,
         HEVC = 0xad,
+        MP3 = 0x15001,
+        AAC = 0x15002,
     };
 
     class Box
@@ -138,6 +139,7 @@ namespace akanchi
     class BoxEsds : public Box
     {
     public:
+        int8_t object_type_id;
         CodecId codec_id; 
         AudioSpecificConfig audioSpecConfig;
     public:
@@ -146,6 +148,7 @@ namespace akanchi
 
     public:
         int decode(FileStreamBuffer *sb) override;
+        std::string description() override;
 
     private:
         int get_descr_len(FileStreamBuffer *sb);

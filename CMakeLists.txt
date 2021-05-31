@@ -24,6 +24,8 @@ add_executable(mp4_demuxer
         trunk/tracks/track_context_avc.hpp
         trunk/tracks/track_context_hevc.cpp
         trunk/tracks/track_context_hevc.hpp
+        trunk/tracks/track_context_mp3.cpp
+        trunk/tracks/track_context_mp3.hpp
         trunk/main.cpp
         trunk/mp4_demuxer.cpp
         trunk/mp4_demuxer.hpp)
