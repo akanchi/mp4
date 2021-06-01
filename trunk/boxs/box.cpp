@@ -25,6 +25,7 @@
 #include "box.hpp"
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include "../file_stream/file_stream.hpp"
 #include "../common/common.hpp"
 
