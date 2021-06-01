@@ -8,6 +8,8 @@ Build Demuxer by:
 
 ```shell
 mkdir cmake-build-debug && cd cmake-build-debug && cmake .. && make
+# or
+sh build.sh
 ```
 
 Run Demuxer by:
