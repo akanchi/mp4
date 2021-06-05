@@ -23,6 +23,7 @@
 */
 
 #include "track_context_opus.hpp"
+#include <cstring>
 #include "../file_stream/file_stream.hpp"
 #include "../common/common.hpp"
 
