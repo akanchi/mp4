@@ -38,6 +38,7 @@ namespace akanchi
         HEVC = 0xad,
         MP3 = 0x15001,
         AAC = 0x15002,
+        OPUS = 0x1503c,
     };
 
     class Box
@@ -152,6 +153,22 @@ namespace akanchi
 
     private:
         int get_descr_len(FileStreamBuffer *sb);
+    };
+
+    class BoxDOps : public Box
+    {
+    public:
+        std::vector<char> extradata;
+
+        uint16_t pre_skip;
+        uint8_t channel_count;
+        uint32_t sample_rate;
+    public:
+        BoxDOps(/* args */);
+        virtual ~BoxDOps();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
     };
     
 } /* namespace akanchi */

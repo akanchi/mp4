@@ -27,6 +27,7 @@
 #include "track_context_aac.hpp"
 #include "track_context_hevc.hpp"
 #include "track_context_mp3.hpp"
+#include "track_context_opus.hpp"
 
 #include "../file_stream/file_stream.hpp"
 
@@ -49,6 +50,10 @@ namespace akanchi
     }
 
     int TrackContext::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+        return 0;
+    }
+
+    int TrackContext::write_file_end(std::ofstream &out_file) {
         return 0;
     }
 
@@ -113,6 +118,9 @@ namespace akanchi
                 }
             }
         }
+
+        write_file_end(out_file);
+
         return 0;
     }
 
@@ -124,7 +132,9 @@ namespace akanchi
         } else if (codec_id == CodecId::HEVC) {
             return new TrackContextHEVC();
         } else if (codec_id == CodecId::MP3) {
-            return  new TrackContextMP3();
+            return new TrackContextMP3();
+        } else if (codec_id == CodecId::OPUS) {
+            return new TrackContextOPUS();
         }
 
         return nullptr;

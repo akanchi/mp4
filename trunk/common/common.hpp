@@ -27,3 +27,6 @@
 #include <string>
 
 extern std::string ascii_from(uint32_t i);
+extern void le_write_2bytes(char *buffer, uint16_t val);
+extern void le_write_4bytes(char *buffer, uint32_t val);
+extern void le_write_8bytes(char *buffer, uint64_t val);

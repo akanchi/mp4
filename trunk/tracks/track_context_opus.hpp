@@ -24,37 +24,32 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
-#include <stdint.h>
-#include <fstream>
+#include "track_context.hpp"
 
-class FileStreamBuffer
+namespace akanchi
 {
-public:
-    FileStreamBuffer(const std::string &file_name);
-    virtual ~FileStreamBuffer();
+    class TrackContextOPUS : public TrackContext
+    {
+    private:
+        /* data */
+        std::vector<uint32_t > crc_table;
+        int page_index;
+        std::vector<char> last_payload;
+        int64_t granule_pos;
+        int32_t sample_rate;
+    public:
+        TrackContextOPUS(/* args */);
+        virtual ~TrackContextOPUS();
 
-public:
-    int8_t read_1byte();
-    int16_t read_2bytes();
-    int32_t read_3bytes();
-    int32_t read_4bytes();
-    int64_t read_8bytes();
-    void read(char *buffer, int len);
-    std::string read_string(int len);
-    void read_vector(std::vector<char> &buffer);
-    void read_to_outstream(std::ofstream &out, int len);
+        std::string file_name() override;
+        int write_file_header(std::ofstream &out_file) override;
+        int write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) override;
+        int write_file_end(std::ofstream &out_file) override;
 
-public:
-    void skip(int size);
-    bool require(int required_size);
-    bool empty();
-    int size();
-    int pos();
-    void setPos(int pos);
-
-private:
-    std::ifstream _stream;
-    size_t _size;
-};
+    private:
+        int write_page(std::ofstream &out_file, const std::vector<char> &payload, char type);
+        void generate_crc();
+        int get_samples_per_frame(const std::vector<char> &data);
+        int get_number_of_frames(const std::vector<char> &data);
+    };
+}

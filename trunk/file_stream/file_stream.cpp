@@ -93,6 +93,11 @@ int64_t FileStreamBuffer::read_8bytes()
     return val;
 }
 
+void FileStreamBuffer::read(char *buffer, int len)
+{
+    _stream.read(buffer, len);
+}
+
 std::string FileStreamBuffer::read_string(int len)
 {
     std::string val(len, 0);

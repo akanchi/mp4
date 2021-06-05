@@ -91,25 +91,22 @@ namespace akanchi
         Box *box = nullptr;
         std::string type_string = ascii_from(type);
         if (type_string == "stsd") {
-            BoxStsd *stsdBox = new BoxStsd();
-            box = stsdBox;
-            box->decode(sb);
+            box = new BoxStsd();
         } else if (type_string == "stco") {
             box = new BoxStco();
-            box->decode(sb);
         } else if (type_string == "stsz") {
             box = new BoxStsz();
-            box->decode(sb);
         } else if (type_string == "stsc") {
             box = new BoxStsc();
-            box->decode(sb);
         } else if (type_string == "esds") {
             box = new BoxEsds();
-            box->decode(sb);
+        } else if (type_string == "dOps") {
+            box = new BoxDOps();
         } else {
             box = new Box();
-            box->decode(sb);
         }
+
+        box->decode(sb);
 
         return box;
     }
@@ -131,6 +128,8 @@ namespace akanchi
                 return CodecId::HEVC;
             } else if (ascii_from((*it)->type) == "avc1") {
                 return CodecId::AVC;
+            } else if (ascii_from((*it)->type) == "Opus") {
+                return CodecId::OPUS;
             }
         }
 
@@ -152,7 +151,7 @@ namespace akanchi
             uint32_t end_pos = entryBox->start + entryBox->size;
 
             std::string format_string = ascii_from(entryBox->type);
-            if (format_string == "mp4a") {
+            if (format_string == "mp4a" || format_string == "Opus") {
                 // mp4a
                 sb->read_string(6);
                 uint16_t data_reference_index = sb->read_2bytes();
@@ -163,9 +162,9 @@ namespace akanchi
                 uint16_t packet_size = sb->read_2bytes();
                 uint16_t sample_rate = ((sb->read_4bytes() >> 16));
 
-                Box *tmp_esds = Box::create_box(sb);
-                if (tmp_esds) {
-                    entryBox->append(tmp_esds);
+                Box *tmpBox = Box::create_box(sb);
+                if (tmpBox) {
+                    entryBox->append(tmpBox);
                 }
             } else if (format_string == "avc1" || format_string == "hev1") {
                 // avc1 || hev1
@@ -351,5 +350,41 @@ namespace akanchi
                 break;
         }
         return len;
+    }
+
+    BoxDOps::BoxDOps(/* args */)
+    {
+    }
+
+    BoxDOps::~BoxDOps()
+    {
+    }
+
+    int BoxDOps::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        extradata.resize(size);
+        memcpy(&extradata[0], "OpusHead", 8);
+
+        int16_t gain_db;
+        sb->read((char *)&extradata[8], 1);
+        extradata[8] = 1;
+        sb->read((char *)&extradata[9], 1);
+        pre_skip = sb->read_2bytes();
+        sample_rate = sb->read_4bytes();
+        gain_db = sb->read_2bytes();
+
+        le_write_2bytes(&extradata[10], pre_skip);
+        le_write_4bytes(&extradata[12], sample_rate);
+        le_write_2bytes(&extradata[16], gain_db);
+
+        channel_count = extradata[9];
+
+        for (size_t i = 18; i < extradata.size();
+            ++i) {
+            sb->read((char *)&extradata[i], 1);
+        }
+
+        return 0;
     }
 }

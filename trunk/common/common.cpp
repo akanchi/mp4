@@ -34,3 +34,27 @@ std::string ascii_from(uint32_t i) {
 
     return ret;
 }
+
+void le_write_2bytes(char *buffer, uint16_t val) {
+    char *p = (char *)&val;
+
+    for (int i = 1; i >= 0; --i) {
+        buffer[i] = p[i];
+    }
+}
+
+void le_write_4bytes(char *buffer, uint32_t val) {
+    char *p = (char *)&val;
+
+    for (int i = 3; i >= 0; --i) {
+        buffer[i] = p[i];
+    }
+}
+
+void le_write_8bytes(char *buffer, uint64_t val) {
+    char *p = (char *)&val;
+
+    for (int i = 7; i >= 0; --i) {
+        buffer[i] = p[i];
+    }
+}
