@@ -2,7 +2,7 @@
 
 [![CMake](https://github.com/akanchi/mp4/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/akanchi/mp4/actions/workflows/cmake.yml)
 
-A simple implementation of mp4 demuxing.
+A simple implementation of mp4 demuxing, supports AVC/HEVC/AAC/mp3/Opus.
 
 ### Usage
 
