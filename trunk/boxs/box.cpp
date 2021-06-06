@@ -103,6 +103,8 @@ namespace akanchi
             box = new BoxEsds();
         } else if (type_string == "dOps") {
             box = new BoxDOps();
+        } else if (type_string == "meta") {
+            box = new BoxMeta();
         } else {
             box = new Box();
         }
@@ -385,6 +387,23 @@ namespace akanchi
             ++i) {
             sb->read((char *)&extradata[i], 1);
         }
+
+        return 0;
+    }
+
+    BoxMeta::BoxMeta(/* args */)
+    {
+    }
+
+    BoxMeta::~BoxMeta()
+    {
+    }
+
+    int BoxMeta::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        version = sb->read_1byte();
+        flags = sb->read_3bytes();
 
         return 0;
     }

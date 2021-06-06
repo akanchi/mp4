@@ -170,5 +170,18 @@ namespace akanchi
     public:
         int decode(FileStreamBuffer *sb) override;
     };
+
+    class BoxMeta : public Box
+    {
+    public:
+        uint8_t version;
+        uint32_t flags;
+    public:
+        BoxMeta(/* args */);
+        virtual ~BoxMeta();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
+    };
     
 } /* namespace akanchi */

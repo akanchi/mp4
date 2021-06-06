@@ -101,7 +101,8 @@ namespace akanchi
                 type_string == "meta" ||
                 type_string == "minf" ||
                 type_string == "stbl" ||
-                type_string == "dinf";
+                type_string == "dinf" ||
+                type_string == "udta";
     }
 
     int Mp4Demuxer::extract()
