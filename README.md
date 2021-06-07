@@ -25,6 +25,9 @@ After run demuxer, here is the box tree:
 ```
 [0, 4298693)
     ftyp[0, 32)
+        major_brand: isom
+        minor_version: 512
+        compatible_brands: isomiso2avc1mp41
     free[32, 40)
     mdat[40, 4270608)
     moov[4270608, 4298693)
@@ -63,12 +66,15 @@ After run demuxer, here is the box tree:
                     stbl[4279408, 4298595)
                         stsd[4279416, 4279519)
                             mp4a[4279432, 4279519)
-                                esds[4279468, 4279519)
+                                esds[4279468, 4279519) codec.0x40
                         stts[4279519, 4279543)
                         stsc[4279543, 4282499)
                         stsz[4282499, 4294687)
                         stco[4294687, 4298595)
         udta[4298595, 4298693)
+            meta[4298603, 4298693)
+                hdlr[4298615, 4298648)
+                ilst[4298648, 4298693)
 ```
 
 Play the extracted file by:
@@ -95,7 +101,7 @@ ffplay aac_audio.aac
 
 如果只知道`stco` 和`stsz`是无法定位媒体数据的，所以需要`sample`和`chunk`的对应表，才能解析出媒体数据
 
-以下表格来自于`docs/qtff.pdt`
+以下表格来自于`docs/qtff.pdf`
 
 **Figure 2-47**    An example of a sample-to-chunk table
 
