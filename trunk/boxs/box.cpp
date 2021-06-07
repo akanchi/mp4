@@ -93,6 +93,8 @@ namespace akanchi
         std::string type_string = ascii_from(type);
         if (type_string == "ftyp") {
             box = new BoxFtyp();
+        } else if (type_string == "mvhd") {
+            box = new BoxMvhd();
         } else if (type_string == "stsd") {
             box = new BoxStsd();
         } else if (type_string == "stco") {
@@ -139,6 +141,83 @@ namespace akanchi
         major_brand = sb->read_string(4);
         minor_version = sb->read_4bytes();
         compatible_brands = sb->read_string(size - sb->pos() - start);
+
+        return 0;
+    }
+
+    BoxMvhd::BoxMvhd(/* args */)
+        : matrix(9, 0)
+    {
+    }
+
+    BoxMvhd::~BoxMvhd()
+    {
+    }
+
+    std::string BoxMvhd::matrix_string(const std::string &prefix) {
+        std::string ret;
+
+        static std::vector<std::string> matrix_names = {"a, b, u", "c, d, v", "x, y, w"};
+        for (size_t i = 0; i < matrix_names.size(); i++) {
+            ret += prefix + "| " + matrix_names[i] + " |" + (i != 1 ? "   " : " = ") +
+                    "| " + std::to_string(matrix[i * 3]) + ", " + std::to_string(matrix[i * 3 + 1]) + ", " + std::to_string(matrix[i * 3 + 2]) + " |" +
+                    ((matrix_names.size() - 1) != i ? "\n" : "");
+        }
+
+        return ret;
+    }
+
+    std::string BoxMvhd::description(const std::string &prefix) {
+        std::string ret = Box::description(prefix);
+        ret += "\n" + prefix + "    version: " + std::to_string(version);
+        ret += "\n" + prefix + "    flags: " + std::to_string(flags);
+        ret += "\n" + prefix + "    creation_time: " + std::to_string(creation_time);
+        ret += "\n" + prefix + "    modification_time: " + std::to_string(modification_time);
+        ret += "\n" + prefix + "    time_scale: " + std::to_string(time_scale);
+        ret += "\n" + prefix + "    duration: " + std::to_string(duration);
+        ret += "\n" + prefix + "    preferred_rate: " + std::to_string(preferred_rate);
+        ret += "\n" + prefix + "    preferred_volume: " + std::to_string(preferred_volume);
+        ret += "\n" + prefix + "    matrix: \n" + matrix_string(prefix + "        ");
+        ret += "\n" + prefix + "    next_track_id: " + std::to_string(next_track_id);
+
+        return ret;
+    }
+
+    int BoxMvhd::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        version = sb->read_1byte();
+        flags = sb->read_3bytes();
+        creation_time = sb->read_4bytes();
+        modification_time = sb->read_4bytes();
+        time_scale = sb->read_4bytes();
+        duration = sb->read_4bytes();
+        int h = sb->read_2bytes();
+        int l = sb->read_2bytes();
+        preferred_rate = 1.0 * h + l * 1.0 / 65535.0;
+        h = sb->read_1byte();
+        l = sb->read_1byte();
+        preferred_volume = 1.0 * h + l * 1.0 / 255.0;
+        reserved = sb->read_string(10);
+        for (int i = 0; i < matrix.size(); i++) {
+            int v = sb->read_4bytes();
+            if ((i + 1) % 3 == 0) {
+                h = (v >> 30) & 0x03;
+                l = v & 0x3fffffff;
+                matrix[i] = (1.0 * h + l * 1.0 / 1073741824.0);
+            } else {
+                h = (v >> 16) & 0xffff;
+                l = v & 0xffff;
+                matrix[i] = (1.0 * h + l * 1.0 / 65535.0);
+            }
+        }
+        preview_time = sb->read_4bytes();
+        preview_duration = sb->read_4bytes();
+        poster_time = sb->read_4bytes();
+        selection_time = sb->read_4bytes();
+        selection_duration = sb->read_4bytes();
+        current_time = sb->read_4bytes();
+        next_track_id = sb->read_4bytes();
 
         return 0;
     }

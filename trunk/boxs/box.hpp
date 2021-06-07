@@ -81,6 +81,38 @@ namespace akanchi
         std::string description(const std::string &prefix = "") override;
     };
 
+    class BoxMvhd : public Box
+    {
+    public:
+        uint8_t version;
+        uint32_t flags;
+        uint32_t creation_time;
+        uint32_t modification_time;
+        uint32_t time_scale;
+        uint32_t duration;
+        float preferred_rate;
+        float preferred_volume;
+        std::string reserved; // 10 bytes
+        std::vector<float> matrix; // 36 bytes
+        uint32_t preview_time;
+        uint32_t preview_duration;
+        uint32_t poster_time;
+        uint32_t selection_time;
+        uint32_t selection_duration;
+        uint32_t current_time;
+        uint32_t next_track_id;
+    public:
+        BoxMvhd(/* args */);
+        virtual ~BoxMvhd();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
+        std::string description(const std::string &prefix = "") override;
+
+    private:
+        std::string matrix_string(const std::string &prefix = "");
+    };
+
     typedef struct AudioSpecificConfig {
         uint8_t extensionFlag : 1;
         uint8_t dependsOnCoreCoder : 1;
