@@ -56,7 +56,7 @@ namespace akanchi
 
     public:
         virtual int decode(FileStreamBuffer *sb);
-        virtual std::string description();
+        virtual std::string description(const std::string &prefix = "");
 
         virtual int append(Box *child);
         virtual int append(std::shared_ptr<Box> child);
@@ -64,6 +64,21 @@ namespace akanchi
 
     public:
         static Box *create_box(FileStreamBuffer *sb);
+    };
+
+    class BoxFtyp : public Box
+    {
+    public:
+        std::string major_brand;
+        uint32_t minor_version;
+        std::string compatible_brands;
+    public:
+        BoxFtyp(/* args */);
+        virtual ~BoxFtyp();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
+        std::string description(const std::string &prefix = "") override;
     };
 
     typedef struct AudioSpecificConfig {
@@ -149,7 +164,7 @@ namespace akanchi
 
     public:
         int decode(FileStreamBuffer *sb) override;
-        std::string description() override;
+        std::string description(const std::string &prefix = "") override;
 
     private:
         int get_descr_len(FileStreamBuffer *sb);

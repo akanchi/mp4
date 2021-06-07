@@ -49,8 +49,8 @@ namespace akanchi
         return 0;
     }
 
-    std::string Box::description() {
-        return ascii_from(type) + "[" + std::to_string(start) + ", " + std::to_string(start + size) + ")";
+    std::string Box::description(const std::string &prefix) {
+        return prefix + ascii_from(type) + "[" + std::to_string(start) + ", " + std::to_string(start + size) + ")";
     }
 
     int Box::append(Box *child) {
@@ -91,7 +91,9 @@ namespace akanchi
 
         Box *box = nullptr;
         std::string type_string = ascii_from(type);
-        if (type_string == "stsd") {
+        if (type_string == "ftyp") {
+            box = new BoxFtyp();
+        } else if (type_string == "stsd") {
             box = new BoxStsd();
         } else if (type_string == "stco") {
             box = new BoxStco();
@@ -112,6 +114,33 @@ namespace akanchi
         box->decode(sb);
 
         return box;
+    }
+
+    BoxFtyp::BoxFtyp(/* args */)
+    {
+    }
+
+    BoxFtyp::~BoxFtyp()
+    {
+    }
+
+    std::string BoxFtyp::description(const std::string &prefix) {
+        std::string ret = Box::description(prefix);
+        ret += "\n" + prefix + "    major_brand: " + major_brand;
+        ret += "\n" + prefix + "    minor_version: " + std::to_string(minor_version);
+        ret += "\n" + prefix + "    compatible_brands: " + compatible_brands;
+
+        return ret;
+    }
+
+    int BoxFtyp::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        major_brand = sb->read_string(4);
+        minor_version = sb->read_4bytes();
+        compatible_brands = sb->read_string(size - sb->pos() - start);
+
+        return 0;
     }
 
     BoxStsd::BoxStsd(/* args */)
@@ -276,10 +305,10 @@ namespace akanchi
     {
     }
 
-    std::string BoxEsds::description() {
+    std::string BoxEsds::description(const std::string &prefix) {
         std::stringstream ss;
         ss << "0x" << std::setfill('0') << std::setw(2) << std::hex << static_cast<unsigned>(object_type_id);
-        return Box::description() + " codec." + ss.str();
+        return Box::description(prefix) + " codec." + ss.str();
     }
 
     int BoxEsds::decode(FileStreamBuffer *sb) {

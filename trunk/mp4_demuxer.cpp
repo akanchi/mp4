@@ -125,7 +125,7 @@ namespace akanchi
             return -1;
         }
 
-        std::cout << prefix << box->description() << std::endl;
+        std::cout << box->description(prefix) << std::endl;
 
         for (auto it = box->childs.begin(); it != box->childs.end(); it++) {
             print_recursive(it->get(), prefix + "    ");
