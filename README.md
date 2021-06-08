@@ -32,6 +32,19 @@ After run demuxer, here is the box tree:
     mdat[40, 4270608)
     moov[4270608, 4298693)
         mvhd[4270616, 4270724)
+            version: 0
+            flags: 0
+            creation_time: 0
+            modification_time: 0
+            time_scale: 1000
+            duration: 64896
+            preferred_rate: 1.000000
+            preferred_volume: 1.000000
+            matrix: 
+                | a, b, u |   | 1.000000, 0.000000, 0.000000 |
+                | c, d, v | = | 0.000000, 1.000000, 0.000000 |
+                | x, y, w |   | 0.000000, 0.000000, 1.000000 |
+            next_track_id: 3
         trak[4270724, 4279127)
             tkhd[4270732, 4270824)
             edts[4270824, 4270860)
@@ -142,4 +155,18 @@ for (int i = 0; i < sample_sizes.count; i++) {
 ```
 
 提取`avc`的时候，一个`sample`可能含有多个`nalu`，格式是``` [nalu length(4bytes)][nalu data(nalu length bytes)]+[nalu length][nalu data]+...```。这个规则同样适用于`hevc`的提取。
+
+#### 关于Opus
+
+按照正常的音频提取的逻辑，提取出来的是`Opus`裸流，播放器无法播放
+
+看了一下`FFmpeg`的处理，需要封装成`Ogg`格式，同时查阅了`Ogg`和`Opus`的协议文档最终封装成可播放的音频文件
+
+`Ogg`封装主要有几部分
+
+* `Ogg`是以`page`为单位封装数据的，`page`以`OggS`开头
+* `OpusHead`，这部分可以从`dOps`中读取，但需要手动添加`OpusHead`
+* `CommentHeader`，以`OpusTags`开头，主要放一些无关紧要的信息
+* 音频数据的封装，如果`sample size >= 255 bytes`，则需要拆分成多个`page`，不然播放器会报`CRC mismatch!`
+* 最后一个`page`的页码和前一个`page`的页码是一样的
 
