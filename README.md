@@ -2,7 +2,7 @@
 
 [![CMake](https://github.com/akanchi/mp4/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/akanchi/mp4/actions/workflows/cmake.yml)
 
-A simple implementation of mp4 demuxing, supports AVC/HEVC/AAC/mp3/Opus.
+A simple implementation of mp4 demuxing, supports AVC/HEVC/VP9/AAC/mp3/Opus.
 
 ### Usage
 
@@ -51,6 +51,14 @@ After run demuxer, here is the box tree:
                 elst[4270832, 4270860)
             mdia[4270860, 4279127)
                 mdhd[4270868, 4270900)
+                    version: 0
+                    flags: 0
+                    creation_time: 0
+                    modification_time: 0
+                    time_scale: 15360
+                    duration: 996352
+                    language: 21956
+                    quality: 0
                 hdlr[4270900, 4270945)
                 minf[4270945, 4279127)
                     vmhd[4270953, 4270973)
@@ -71,6 +79,14 @@ After run demuxer, here is the box tree:
                 elst[4279235, 4279263)
             mdia[4279263, 4298595)
                 mdhd[4279271, 4279303)
+                    version: 0
+                    flags: 0
+                    creation_time: 0
+                    modification_time: 0
+                    time_scale: 48000
+                    duration: 3115008
+                    language: 21956
+                    quality: 0
                 hdlr[4279303, 4279348)
                 minf[4279348, 4298595)
                     smhd[4279356, 4279372)
