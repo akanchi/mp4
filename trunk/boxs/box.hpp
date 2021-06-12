@@ -35,6 +35,7 @@ namespace akanchi
     enum CodecId: uint32_t {
         Unknown = 0,
         AVC = 0x1b,
+        VP9 = 0xa7,
         HEVC = 0xad,
         MP3 = 0x15001,
         AAC = 0x15002,
@@ -113,6 +114,26 @@ namespace akanchi
         std::string matrix_string(const std::string &prefix = "");
     };
 
+    class BoxMdhd : public Box
+    {
+    public:
+        uint8_t version;
+        uint32_t flags;
+        uint32_t creation_time;
+        uint32_t modification_time;
+        uint32_t time_scale;
+        uint32_t duration;
+        uint16_t language;
+        uint16_t quality;
+    public:
+        BoxMdhd(/* args */);
+        virtual ~BoxMdhd();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
+        std::string description(const std::string &prefix = "") override;
+    };
+
     typedef struct AudioSpecificConfig {
         uint8_t extensionFlag : 1;
         uint8_t dependsOnCoreCoder : 1;
@@ -179,6 +200,25 @@ namespace akanchi
     public:
         BoxStco(/* args */);
         ~BoxStco();
+
+    public:
+        int decode(FileStreamBuffer *sb) override;
+    };
+
+    typedef struct SttsEntry
+    {
+        uint32_t sample_count;
+        uint32_t sample_duration;
+    }SttsEntry;
+
+    class BoxStts : public Box
+    {
+    public:
+        /* data */
+        std::vector<SttsEntry> entries;
+    public:
+        BoxStts(/* args */);
+        ~BoxStts();
 
     public:
         int decode(FileStreamBuffer *sb) override;

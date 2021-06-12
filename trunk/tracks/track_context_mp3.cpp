@@ -43,7 +43,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContextMP3::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContextMP3::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration) {
         sb->setPos(start_pos);
         sb->read_to_outstream(out_file, sample_size);
 

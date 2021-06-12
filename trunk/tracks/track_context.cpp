@@ -28,6 +28,7 @@
 #include "track_context_hevc.hpp"
 #include "track_context_mp3.hpp"
 #include "track_context_opus.hpp"
+#include "track_context_vp9.hpp"
 
 #include "../file_stream/file_stream.hpp"
 
@@ -49,7 +50,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContext::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContext::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration) {
         return 0;
     }
 
@@ -67,6 +68,8 @@ namespace akanchi
                 stsc = tmp;
             } else if (BoxStsd *tmp = dynamic_cast<BoxStsd*>(it->get())) {
                 stsd = tmp;
+            } else if (BoxStts *tmp = dynamic_cast<BoxStts*>(it->get())) {
+                stts = tmp;
             }
         }
     }
@@ -78,6 +81,9 @@ namespace akanchi
         uint32_t current_entry_sample_index = 0;
         uint32_t chunk_logic_index = 0;
         uint32_t sample_offset = 0;
+
+        uint32_t current_stts_entry_index = 0;
+        uint32_t current_stts_entry_sample_index = 0;
 
         std::ofstream out_file(file_name(), std::ios::binary);
 
@@ -91,7 +97,9 @@ namespace akanchi
             StscEntry entry = stsc->entries[current_entry_index];
             uint64_t pos = stco->chunk_offsets[chunk_logic_index] + sample_offset;
 
-            write_to_file(out_file, pos, *sampleSizeIt);
+            SttsEntry stts_entry = stts->entries[current_stts_entry_index];
+
+            write_to_file(out_file, pos, *sampleSizeIt, stts_entry.sample_duration);
 
             current_entry_sample_index++;
             sample_offset += *sampleSizeIt;
@@ -110,6 +118,15 @@ namespace akanchi
                 // reset sample offset
                 sample_offset = 0;
                 current_entry_sample_index = 0;
+            }
+
+            // for stts entries
+            current_stts_entry_sample_index++;
+            if (current_stts_entry_sample_index >= stts_entry.sample_count) {
+                current_stts_entry_sample_index = 0;
+                if (current_stts_entry_index + 1 < stts->entries.size()) {
+                    current_stts_entry_index++;
+                }
             }
 
             if (current_entry_index + 1 < stsc->entries.size()) {
@@ -135,6 +152,8 @@ namespace akanchi
             return new TrackContextMP3();
         } else if (codec_id == CodecId::OPUS) {
             return new TrackContextOPUS();
+        } else if (codec_id == CodecId::VP9) {
+            return new TrackContextVP9();
         }
 
         return nullptr;

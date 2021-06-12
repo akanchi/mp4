@@ -43,7 +43,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContextAAC::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContextAAC::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration) {
         char packet[7] = {0};
 
         int profile = audioSpecConfig.audioObjectType;

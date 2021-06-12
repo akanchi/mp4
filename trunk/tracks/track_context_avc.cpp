@@ -72,7 +72,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContextAVC::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContextAVC::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration) {
         char start_code[4] = {0x00, 0x00, 0x00, 0x01};
         int64_t remain_size = sample_size;
         sb->setPos(start_pos);

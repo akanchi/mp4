@@ -50,6 +50,8 @@ namespace akanchi
         std::stack<Box*> parentStack;
         parentStack.push(tmpRoot);
 
+        Box *mdhd = nullptr;
+
         while (!inSb->empty())
         {
             Box *box = Box::create_box(inSb);
@@ -61,9 +63,19 @@ namespace akanchi
             if (ascii_from(box->type) == "stsd") {
                 BoxStsd *stsdBox = dynamic_cast<BoxStsd*>(box);
                 uint32_t codec_id = stsdBox->get_codec_id();
-                contexts[codec_id] = std::shared_ptr<TrackContext>(TrackContext::create_track_context(codec_id));
-                contexts[codec_id]->stbl = tmpRoot;
-                contexts[codec_id]->sb = inSb;
+                TrackContext *track = TrackContext::create_track_context(codec_id);
+                if (track) {
+                    contexts[codec_id] = std::shared_ptr<TrackContext>(track);
+                    contexts[codec_id]->stbl = tmpRoot;
+                    contexts[codec_id]->sb = inSb;
+                    if (BoxMdhd *tmp = dynamic_cast<BoxMdhd*>(mdhd)) {
+                        contexts[codec_id]->mdhd = tmp;
+                    }
+                } else {
+                    std::cout << "Unknown codec!" << std::endl;
+                }
+            } else if (ascii_from(box->type) == "mdhd") {
+                mdhd = box;
             }
 
             tmpRoot->append(box);

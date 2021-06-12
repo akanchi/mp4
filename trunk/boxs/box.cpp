@@ -30,16 +30,12 @@
 #include "../file_stream/file_stream.hpp"
 #include "../common/common.hpp"
 
-namespace akanchi
-{
+namespace akanchi {
     Box::Box(/* args */)
-        : size(0)
-        , type(0)
-    {
+            : size(0), type(0) {
     }
 
-    Box::~Box()
-    {
+    Box::~Box() {
     }
 
     int Box::decode(FileStreamBuffer *sb) {
@@ -79,7 +75,7 @@ namespace akanchi
         }
 
         uint32_t size = sb->read_4bytes();
-        if (!sb->require(size-4)) {
+        if (!sb->require(size - 4)) {
             sb->skip(-4);
             return nullptr;
         }
@@ -103,12 +99,16 @@ namespace akanchi
             box = new BoxStsz();
         } else if (type_string == "stsc") {
             box = new BoxStsc();
+        } else if (type_string == "stts") {
+            box = new BoxStts();
         } else if (type_string == "esds") {
             box = new BoxEsds();
         } else if (type_string == "dOps") {
             box = new BoxDOps();
         } else if (type_string == "meta") {
             box = new BoxMeta();
+        } else if (type_string == "mdhd") {
+            box = new BoxMdhd();
         } else {
             box = new Box();
         }
@@ -118,12 +118,10 @@ namespace akanchi
         return box;
     }
 
-    BoxFtyp::BoxFtyp(/* args */)
-    {
+    BoxFtyp::BoxFtyp(/* args */) {
     }
 
-    BoxFtyp::~BoxFtyp()
-    {
+    BoxFtyp::~BoxFtyp() {
     }
 
     std::string BoxFtyp::description(const std::string &prefix) {
@@ -160,8 +158,9 @@ namespace akanchi
         static std::vector<std::string> matrix_names = {"a, b, u", "c, d, v", "x, y, w"};
         for (size_t i = 0; i < matrix_names.size(); i++) {
             ret += prefix + "| " + matrix_names[i] + " |" + (i != 1 ? "   " : " = ") +
-                    "| " + std::to_string(matrix[i * 3]) + ", " + std::to_string(matrix[i * 3 + 1]) + ", " + std::to_string(matrix[i * 3 + 2]) + " |" +
-                    ((matrix_names.size() - 1) != i ? "\n" : "");
+                   "| " + std::to_string(matrix[i * 3]) + ", " + std::to_string(matrix[i * 3 + 1]) + ", " +
+                   std::to_string(matrix[i * 3 + 2]) + " |" +
+                   ((matrix_names.size() - 1) != i ? "\n" : "");
         }
 
         return ret;
@@ -222,6 +221,43 @@ namespace akanchi
         return 0;
     }
 
+    BoxMdhd::BoxMdhd(/* args */)
+    {
+    }
+
+    BoxMdhd::~BoxMdhd()
+    {
+    }
+
+    std::string BoxMdhd::description(const std::string &prefix) {
+        std::string ret = Box::description(prefix);
+        ret += "\n" + prefix + "    version: " + std::to_string(version);
+        ret += "\n" + prefix + "    flags: " + std::to_string(flags);
+        ret += "\n" + prefix + "    creation_time: " + std::to_string(creation_time);
+        ret += "\n" + prefix + "    modification_time: " + std::to_string(modification_time);
+        ret += "\n" + prefix + "    time_scale: " + std::to_string(time_scale);
+        ret += "\n" + prefix + "    duration: " + std::to_string(duration);
+        ret += "\n" + prefix + "    language: " + std::to_string(language);
+        ret += "\n" + prefix + "    quality: " + std::to_string(quality);
+
+        return ret;
+    }
+
+    int BoxMdhd::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        version = sb->read_1byte();
+        flags = sb->read_3bytes();
+        creation_time = sb->read_4bytes();
+        modification_time = sb->read_4bytes();
+        time_scale = sb->read_4bytes();
+        duration = sb->read_4bytes();
+        language = sb->read_2bytes();
+        quality = sb->read_2bytes();
+
+        return 0;
+    }
+
     BoxStsd::BoxStsd(/* args */)
     {
     }
@@ -241,6 +277,8 @@ namespace akanchi
                 return CodecId::AVC;
             } else if (ascii_from((*it)->type) == "Opus") {
                 return CodecId::OPUS;
+            } else if (ascii_from((*it)->type) == "vp09") {
+                return CodecId::VP9;
             }
         }
 
@@ -277,7 +315,7 @@ namespace akanchi
                 if (tmpBox) {
                     entryBox->append(tmpBox);
                 }
-            } else if (format_string == "avc1" || format_string == "hev1") {
+            } else if (format_string == "avc1" || format_string == "hev1" || format_string == "vp09") {
                 // avc1 || hev1
                 sb->read_string(6);
                 uint16_t data_reference_index = sb->read_2bytes();
@@ -288,9 +326,9 @@ namespace akanchi
                 sb->read_string(32);
                 sb->read_string(4);
 
-                Box *tmp_box = Box::create_box(sb);
-                if (tmp_box) {
-                    entryBox->append(tmp_box);
+                Box *tmpBox = Box::create_box(sb);
+                if (tmpBox) {
+                    entryBox->append(tmpBox);
                 }
             }
 
@@ -371,6 +409,32 @@ namespace akanchi
 
         for (size_t i = 0; i < entries_count; i++) {
             chunk_offsets.push_back(sb->read_4bytes());
+        }
+
+        return 0;
+    }
+
+    BoxStts::BoxStts(/* args */)
+    {
+    }
+
+    BoxStts::~BoxStts()
+    {
+    }
+
+    int BoxStts::decode(FileStreamBuffer *sb) {
+        Box::decode(sb);
+
+        uint8_t version = sb->read_1byte();
+        uint32_t flags = sb->read_3bytes();
+        uint32_t entries_count = sb->read_4bytes();
+
+        for (size_t i = 0; i < entries_count; i++) {
+            SttsEntry entry;
+            entry.sample_count = sb->read_4bytes();
+            entry.sample_duration = sb->read_4bytes();
+
+            entries.push_back(entry);
         }
 
         return 0;

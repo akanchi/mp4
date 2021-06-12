@@ -37,6 +37,7 @@ namespace akanchi
     {
     public:
         /* data */
+        BoxMdhd *mdhd;
         Box *stbl;
         FileStreamBuffer *sb;
 
@@ -44,6 +45,7 @@ namespace akanchi
         BoxStsz *stsz;
         BoxStsc *stsc;
         BoxStsd *stsd;
+        BoxStts *stts;
         
     public:
         TrackContext(/* args */);
@@ -52,7 +54,7 @@ namespace akanchi
         virtual void initialize_boxs();
         virtual std::string file_name();
         virtual int write_file_header(std::ofstream &out_file);
-        virtual int write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size);
+        virtual int write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration);
         virtual int write_file_end(std::ofstream &out_file);
 
         virtual int extract();

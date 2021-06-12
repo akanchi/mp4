@@ -67,7 +67,7 @@ namespace akanchi
         return 0;
     }
 
-    int TrackContextOPUS::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size) {
+    int TrackContextOPUS::write_to_file(std::ofstream &out_file, uint32_t start_pos, uint64_t sample_size, uint64_t sample_duration) {
         sb->setPos(start_pos);
         last_payload.resize(sample_size);
         sb->read_vector(last_payload);
