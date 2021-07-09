@@ -114,7 +114,7 @@ ffplay aac_audio.aac
 
 ### Key points
 
-我的目的是将`mp4`文件中的`aac`和`avc`解析出来，并保存为对应媒体文件。
+我的目的是将`mp4`文件中的音视频数据解析出来，并保存为对应媒体文件。
 
 众所周知，`mp4`的媒体数据是保存在`mdat`中，但 `mdat`没有告诉我们哪些是音频/视频数据，所以需要依赖其它`box`（主要是`stco`、`stsz`、`stsc`）去定位`mdat`中的音视频数据。
 
@@ -183,6 +183,6 @@ for (int i = 0; i < sample_sizes.count; i++) {
 * `Ogg`是以`page`为单位封装数据的，`page`以`OggS`开头
 * `OpusHead`，这部分可以从`dOps`中读取，但需要手动添加`OpusHead`
 * `CommentHeader`，以`OpusTags`开头，主要放一些无关紧要的信息
-* 音频数据的封装，如果`sample size >= 255 bytes`，则需要拆分成多个`page`，不然播放器会报`CRC mismatch!`
+* 音频数据的封装，如果`sample size > 255 bytes`，则需要拆分成多个`page`，因为记录`page payload`大小的字段只有`1个字节`，不然播放器会报`CRC mismatch!`
 * 最后一个`page`的页码和前一个`page`的页码是一样的
 
