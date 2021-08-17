@@ -32,7 +32,9 @@
 
 namespace akanchi {
     Box::Box(/* args */)
-            : size(0), type(0) {
+            : size(0)
+            , type(0)
+            , header_size(8) {
     }
 
     Box::~Box() {
@@ -42,6 +44,15 @@ namespace akanchi {
         start = sb->pos();
         size = sb->read_4bytes();
         type = sb->read_4bytes();
+
+        if (size == 1) {
+            size = sb->read_8bytes();
+            header_size += 8;
+        } else if (size == 0) {
+            // the last box
+            size = sb->size() - sb->pos() + header_size;
+        }
+
         return 0;
     }
 
@@ -70,20 +81,26 @@ namespace akanchi {
     }
 
     Box *Box::create_box(FileStreamBuffer *sb) {
-        if (!sb->require(4)) {
+        if (!sb->require(8)) {
             return nullptr;
         }
 
-        uint32_t size = sb->read_4bytes();
-        if (!sb->require(size - 4)) {
-            sb->skip(-4);
-            return nullptr;
-        }
-
+        int offset = 8;
+        uint64_t size = sb->read_4bytes();
         uint32_t type = sb->read_4bytes();
 
+        if (size == 1) {
+            if (!sb->require(8)) {
+                sb->skip(-offset);
+                return nullptr;
+            }
+
+            size = sb->read_8bytes();
+            offset += 8;
+        }
+
         // move to start point
-        sb->skip(-8);
+        sb->skip(-offset);
 
         Box *box = nullptr;
         std::string type_string = ascii_from(type);

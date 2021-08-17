@@ -45,8 +45,9 @@ namespace akanchi
     class Box
     {
     public:
-        uint32_t size;
+        uint64_t size;
         uint32_t type;
+        uint32_t header_size;
 
         uint32_t start;
 
